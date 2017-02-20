@@ -1,0 +1,25 @@
+{{ define "title" }}
+    新規作成
+{{ end }}
+{{ define "content" }}
+    <h1>新規作成</h1>
+
+    <hr>
+
+    <form action="/bbs" method="POST">
+      <ul>
+        <li>
+          掲示板名 <input type="text" name="bbs_name" VALUE="" SIZE="36" MAXLENGTH="60">
+        </li>
+        <li>
+          テーマ
+          <select name="theme">
+            <option value="blue"> blue </option>
+            <option value="green"> green </option>
+            <option value="black"> black </option>
+          </select>
+        </li>
+      </ul>
+      <input type="submit">
+    </form>
+{{ end }}
