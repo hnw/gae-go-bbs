@@ -25,6 +25,11 @@ type post struct {
 
 type posts []*post
 
+func (p *post) fromKey(k *datastore.Key) error {
+	p.ID = k.IntID()
+	return nil
+}
+
 func (p *post) fromRequest(r *http.Request) error {
 	now := time.Now()
 
@@ -70,7 +75,7 @@ func (p *post) put(g *goon.Goon) (*datastore.Key, error) {
 func (ptr *posts) getAll(g *goon.Goon, b *bbs, limit int, encodedCursor string) error {
 	ps := *ptr
 
-	q := datastore.NewQuery("post").Filter("bbs_id =", b.ID).Order("-updated_at")
+	q := datastore.NewQuery("post").KeysOnly().Filter("bbs_id =", b.ID).Order("-updated_at")
 	if encodedCursor != "" {
 		cursor, err := datastore.DecodeCursor(encodedCursor)
 		if err == nil {
@@ -80,16 +85,23 @@ func (ptr *posts) getAll(g *goon.Goon, b *bbs, limit int, encodedCursor string) 
 	// Iterate over the results.
 	t := g.Run(q)
 	for {
-		p := new(post)
-		_, err := t.Next(p)
+		k, err := t.Next(nil)
 		if err == datastore.Done {
 			break
 		}
 		if err != nil {
 			return err
 		}
+		p := new(post)
+		if err := p.fromKey(k); err != nil {
+			return err
+		}
 		ps = append(ps, p)
 	}
+	if err := g.GetMulti(ps); err != nil {
+		return err
+	}
+
 	*ptr = ps
 	return nil
 }
