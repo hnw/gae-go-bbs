@@ -45,4 +45,9 @@
 
     <hr>
     {{end}}
+
+    <a href="/bbs/{{ .bbs.ID }}/posts">最新へ</a>
+    {{ if .next_cur }}
+     | <a href="/bbs/{{ .bbs.ID }}/posts?offset={{ .next_cur }}">次へ</a>
+    {{ end }}
 {{ end }}

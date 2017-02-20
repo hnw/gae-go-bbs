@@ -85,19 +85,22 @@ func listPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	tmpl := template.Must(template.ParseFiles("tmpl/layout.html", "tmpl/list_posts.html"))
 
-	limit := 20
+	limit := 10
 	ps := make(posts, 0, limit)
-	var err error
-	if err = ps.getAll(g, b, limit, ""); err != nil {
+	nextCur, err := ps.getAll(g, b, limit, r.FormValue("offset"))
+	if err != nil {
 		aelog.Errorf(ctx, "%v", err)
+		return
 	}
 	vars := map[string]interface{}{
-		"bbs":    b,
-		"bbs_id": mux.Vars(r)["bbs_id"],
-		"posts":  ps,
+		"bbs":      b,
+		"bbs_id":   mux.Vars(r)["bbs_id"],
+		"posts":    ps,
+		"next_cur": nextCur,
 	}
 	if err := tmpl.ExecuteTemplate(w, "layout", vars); err != nil {
 		aelog.Errorf(ctx, "%v", err)
+		return
 	}
 }
 

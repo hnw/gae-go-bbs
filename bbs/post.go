@@ -66,8 +66,9 @@ func (p *post) put(g *goon.Goon) (*datastore.Key, error) {
 	return k, nil
 }
 
-func (ptr *posts) getAll(g *goon.Goon, b *bbs, limit int, encodedCursor string) error {
+func (ptr *posts) getAll(g *goon.Goon, b *bbs, limit int, encodedCursor string) (string, error) {
 	ps := *ptr
+	encCur := ""
 
 	q := datastore.NewQuery("post").KeysOnly().Filter("bbs_id =", b.ID).Order("-updated_at")
 	if encodedCursor != "" {
@@ -78,24 +79,35 @@ func (ptr *posts) getAll(g *goon.Goon, b *bbs, limit int, encodedCursor string) 
 	}
 	// Iterate over the results.
 	t := g.Run(q)
+	cnt := 0
 	for {
 		k, err := t.Next(nil)
 		if err == datastore.Done {
 			break
 		}
 		if err != nil {
-			return err
+			return "", err
 		}
 		p := new(post)
 		if err := p.fromKey(k); err != nil {
-			return err
+			return "", err
 		}
 		ps = append(ps, p)
+		cnt += 1
+		if cnt >= limit {
+			cur, err := t.Cursor()
+			if err != nil {
+				return "", err
+			}
+			encCur = cur.String()
+			break
+		}
 	}
 	if err := g.GetMulti(ps); err != nil {
-		return err
+		return "", err
 	}
 
 	*ptr = ps
-	return nil
+
+	return encCur, nil
 }
