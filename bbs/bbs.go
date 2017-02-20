@@ -14,6 +14,7 @@ import (
 type bbs struct {
 	ID        int64     `datastore:"-" goon:"id"`
 	Name      string    `datastore:"name,noindex"`
+	Descr     string    `datastore:"descr,noindex"`
 	Theme     string    `datastore:"theme,noindex"`
 	CreatedAt time.Time `datastore:"created_at,noindex"`
 	UpdatedAt time.Time `datastore:"updated_at,noindex"`
@@ -31,6 +32,7 @@ func (b *bbs) fromString(s string) error {
 func (b *bbs) fromRequest(r *http.Request) error {
 	now := time.Now()
 	b.Name = r.PostFormValue("bbs_name")
+	b.Descr = r.PostFormValue("bbs_descr")
 	b.Theme = r.PostFormValue("theme")
 	b.CreatedAt = now
 	b.UpdatedAt = now
