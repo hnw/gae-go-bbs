@@ -7,6 +7,8 @@ env_variables:
   #TIMEZONE_OFFSET: 32400
 
 handlers:
+- url: /assets
+  static_dir: assets
 - url: /.*
   script: _go_app
   secure: always
