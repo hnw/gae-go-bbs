@@ -1,25 +1,32 @@
-{{ define "title" }}
+{{ define "title" -}}
     新規作成
-{{ end }}
+{{- end }}
 {{ define "content" }}
-    <h1>新規作成</h1>
+    <h1>BBS新規作成</h1>
 
     <hr>
 
-    <form action="/bbs" method="POST">
-      <ul>
-        <li>
-          掲示板名 <input type="text" name="bbs_name" VALUE="" SIZE="36" MAXLENGTH="60">
-        </li>
-        <li>
-          テーマ
-          <select name="theme">
+    <form action="/bbs" method="POST" class="form-horizontal">
+      <div class="form-group">
+        <label for="inputBbsName" class="col-sm-2 control-label">BBS名</label>
+        <div class="col-sm-10">
+          <input name="bbs_name" type="text" class="form-control" id="inputBbsName" placeholder="foobar's BBS">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="inputTheme" class="col-sm-2 control-label">テーマ</label>
+        <div class="col-sm-10">
+          <select name="theme" class="form-control" id="inputTheme">
             <option value="blue"> blue </option>
             <option value="green"> green </option>
             <option value="black"> black </option>
           </select>
-        </li>
-      </ul>
-      <input type="submit">
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button type="submit" class="btn btn-default">作成</button>
+        </div>
+      </div>
     </form>
 {{ end }}

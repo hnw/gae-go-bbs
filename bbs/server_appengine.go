@@ -37,10 +37,11 @@ func init() {
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/bbs", newBbsHandler)
-	r.HandleFunc("/bbs/{bbs_id:[0-9]+}/posts", listPostsHandler).Methods("GET")
-	r.HandleFunc("/bbs/{bbs_id:[0-9]+}/posts", newPostHandler).Methods("POST")
-	http.Handle("/", r)
+	r.HandleFunc(`/bbs{_dummy:/?}`, newBbsHandler)
+	r.HandleFunc(`/bbs/{bbs_id:[0-9]+}/posts`, listPostsHandler).Methods(`GET`)
+	r.HandleFunc(`/bbs/{bbs_id:[0-9]+}/posts`, newPostHandler).Methods(`POST`)
+	r.PathPrefix(`/assets/`).Handler(http.FileServer(http.Dir(`./`)))
+	http.Handle(`/`, r)
 }
 
 func newBbsHandler(w http.ResponseWriter, r *http.Request) {
@@ -81,7 +82,6 @@ func listPostsHandler(w http.ResponseWriter, r *http.Request) {
 		aelog.Errorf(ctx, "%v", err)
 		return
 	}
-	aelog.Errorf(ctx, "%v", b)
 
 	tmpl := template.Must(template.ParseFiles("tmpl/layout.html", "tmpl/list_posts.html"))
 

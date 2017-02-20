@@ -1,36 +1,46 @@
-{{ define "title" }}
+{{ define "title" -}}
     {{.bbs.Name}}
-{{ end }}
+{{- end }}
 {{ define "content" }}
-    <h1>{{.bbs.Name}}</h1>
+    <h1>{{ .bbs.Name }}</h1>
 
     <hr>
 
-    <form action="/bbs/{{.bbs.ID}}/posts" method="POST">
-      <ul>
-        <li>
-          題名：<input type="text" name="subject" VALUE="" SIZE="36" MAXLENGTH="60">
-        </li>
-        <li>
-          投稿者：<input type="text" name="user_name" VALUE="" SIZE="20" MAXLENGTH="24">
-        </li>
-        <li>
-          <textarea name="message" rows="" cols="82">
-          </textarea>
-        </li>
-      </ul>
-      <input type="submit">
+    <form action="/bbs/{{ .bbs.ID }}/posts" method="POST" class="form-horizontal">
+      <div class="form-group">
+        <label for="inputSubject" class="col-sm-2 control-label">題名</label>
+        <div class="col-sm-10">
+          <input name="subject" type="text" class="form-control" id="inputSubject">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="inputUserName" class="col-sm-2 control-label">投稿者</label>
+        <div class="col-sm-10">
+          <input name="user_name" type="text" class="form-control" id="inputUserName">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="inputMessage" class="col-sm-2 control-label">メッセージ</label>
+        <div class="col-sm-10">
+          <textarea name="message" class="form-control" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button type="submit" class="btn btn-default">投稿</button>
+        </div>
+      </div>
     </form>
 
     <hr>
     
-    {{range .posts}}
+    {{ range .posts }}
     <div>
-      <h2><small>題名：</small>{{.Subject}}</h2>
-      <h3><small>投稿者：</small>{{.UserName}}</h3>
-      <h4><small>日付：</small>{{.CreatedAt.Local.Format "2006年1月2日 15時4分5秒"}}</h4>
-      <p>{{.Message}}</p>
-      
+      <h2>{{ .Subject }}</h2>
+      <p>{{ .Message }}</p>
+      <footer>
+        <p class="text-right">{{ .CreatedAt.Local.Format "2006年1月2日 15時4分5秒" }} by <strong>{{ .UserName }}</strong></p>
+      </footer>
     </div>
 
     <hr>
