@@ -1,5 +1,5 @@
 // How to deploy:
-//   $ appcfg.py update . -A [application_id]
+//   $ goapp deploy -application <application_id> [-version <version_number>]
 
 // +build appengine
 
