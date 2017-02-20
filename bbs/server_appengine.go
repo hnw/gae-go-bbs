@@ -75,7 +75,7 @@ func listPostsHandler(w http.ResponseWriter, r *http.Request) {
 	g := goon.NewGoon(r)
 
 	b := new(bbs)
-	if err := b.fromRequest(r); err != nil {
+	if err := b.fromString(mux.Vars(r)["bbs_id"]); err != nil {
 		aelog.Errorf(ctx, "%v", err)
 		return
 	} else if err := b.get(g); err != nil {
@@ -106,7 +106,7 @@ func newPostHandler(w http.ResponseWriter, r *http.Request) {
 	g := goon.NewGoon(r)
 
 	b := new(bbs)
-	if err := b.fromRequest(r); err != nil {
+	if err := b.fromString(mux.Vars(r)["bbs_id"]); err != nil {
 		aelog.Errorf(ctx, "%v", err)
 		return
 	} else if err := b.get(g); err != nil {
@@ -115,7 +115,7 @@ func newPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	p := new(post)
-	if err := p.fromRequest(r); err != nil {
+	if err := p.fromRequest(r, b); err != nil {
 		aelog.Errorf(ctx, "%v", err)
 	} else if _, err = g.Put(p); err != nil {
 		aelog.Errorf(ctx, "%v", err)

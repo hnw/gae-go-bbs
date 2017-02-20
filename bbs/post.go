@@ -3,12 +3,10 @@ package main
 import (
 	"errors"
 	"net/http"
-	"strconv"
 	"time"
 
 	"google.golang.org/appengine/datastore"
 
-	"github.com/gorilla/mux"
 	"github.com/mjibson/goon"
 )
 
@@ -30,14 +28,10 @@ func (p *post) fromKey(k *datastore.Key) error {
 	return nil
 }
 
-func (p *post) fromRequest(r *http.Request) error {
+func (p *post) fromRequest(r *http.Request, b *bbs) error {
 	now := time.Now()
 
-	bbsID, err := strconv.ParseInt(mux.Vars(r)["bbs_id"], 10, 64)
-	if err != nil {
-		return err
-	}
-	p.BbsID = bbsID
+	p.BbsID = b.ID
 	p.UserName = r.PostFormValue("user_name")
 	p.Subject = r.PostFormValue("subject")
 	p.Message = r.PostFormValue("message")

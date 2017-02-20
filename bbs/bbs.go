@@ -8,7 +8,6 @@ import (
 
 	"google.golang.org/appengine/datastore"
 
-	"github.com/gorilla/mux"
 	"github.com/mjibson/goon"
 )
 
@@ -20,20 +19,21 @@ type bbs struct {
 	UpdatedAt time.Time `datastore:"updated_at,noindex"`
 }
 
-func (b *bbs) fromRequest(r *http.Request) error {
-	if mux.Vars(r)["bbs_id"] != "" {
-		bbsID, err := strconv.ParseInt(mux.Vars(r)["bbs_id"], 10, 64)
-		if err != nil {
-			return err
-		}
-		b.ID = bbsID
-	} else {
-		now := time.Now()
-		b.Name = r.PostFormValue("bbs_name")
-		b.Theme = r.PostFormValue("theme")
-		b.CreatedAt = now
-		b.UpdatedAt = now
+func (b *bbs) fromString(s string) error {
+	bbsID, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return err
 	}
+	b.ID = bbsID
+	return nil
+}
+
+func (b *bbs) fromRequest(r *http.Request) error {
+	now := time.Now()
+	b.Name = r.PostFormValue("bbs_name")
+	b.Theme = r.PostFormValue("theme")
+	b.CreatedAt = now
+	b.UpdatedAt = now
 
 	return nil
 }
