@@ -97,7 +97,7 @@ func (ptr *posts) getAll(g *goon.Goon, b *bbs, limit int, encodedCursor string) 
 		ps = append(ps, p)
 		cnt += 1
 		if cnt >= limit {
-			cur, err := t.Cursor() // 内部的にAPIに問い合わせる
+			cur, err := t.Cursor() // 内部的にAPIに問い合わせるため遅い
 			if err != nil {
 				return "", err
 			}
