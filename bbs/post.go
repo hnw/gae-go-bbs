@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"google.golang.org/appengine/datastore"
+	//aelog "google.golang.org/appengine/log"
 
 	"github.com/mjibson/goon"
 )
@@ -79,6 +80,7 @@ func (ptr *posts) getAll(g *goon.Goon, b *bbs, limit int, encodedCursor string) 
 	}
 	// Iterate over the results.
 	t := g.Run(q)
+	//aelog.Infof(g.Context, "g.Run() finished")
 	cnt := 0
 	for {
 		k, err := t.Next(nil)
@@ -95,7 +97,7 @@ func (ptr *posts) getAll(g *goon.Goon, b *bbs, limit int, encodedCursor string) 
 		ps = append(ps, p)
 		cnt += 1
 		if cnt >= limit {
-			cur, err := t.Cursor()
+			cur, err := t.Cursor() // 内部的にAPIに問い合わせる
 			if err != nil {
 				return "", err
 			}
