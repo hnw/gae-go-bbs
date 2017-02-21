@@ -64,7 +64,15 @@ func init() {
 	r.HandleFunc(`/bbs/{bbs_id:[0-9]+}/posts`, listPostsHandler).Methods(`GET`)
 	r.HandleFunc(`/bbs/{bbs_id:[0-9]+}/posts`, newPostHandler).Methods(`POST`)
 	r.PathPrefix(`/assets/`).Handler(http.FileServer(http.Dir(`./`)))
+	r.NotFoundHandler = http.HandlerFunc(notFoundHandler)
 	http.Handle(`/`, r)
+}
+
+func notFoundHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	if err := parseHTML(w, "tmpl/error.html", "404 Not Found"); err != nil {
+		aelog.Errorf(ctx, "%v", err)
+	}
 }
 
 func newBbsHandler(w http.ResponseWriter, r *http.Request) {
