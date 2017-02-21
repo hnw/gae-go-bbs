@@ -8,9 +8,11 @@ package main
 import (
 	"fmt"
 	"html/template"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"google.golang.org/appengine"
@@ -19,6 +21,27 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/mjibson/goon"
 )
+
+func parseHTML(wr io.Writer, filename string, data interface{}) error {
+	// TemplateFuncs are stolen from revel framework.
+	// See: https://github.com/revel/revel/blob/master/template.go
+	TemplateFuncs := map[string]interface{}{
+		// Replaces newlines with <br>
+		"nl2br": func(text string) template.HTML {
+			return template.HTML(strings.Replace(template.HTMLEscapeString(text), "\n", "<br>", -1))
+		},
+
+		// Skips sanitation on the parameter.  Do not use with dynamic data.
+		"raw": func(text string) template.HTML {
+			return template.HTML(text)
+		},
+	}
+	tmpl, err := template.New("base").Funcs(TemplateFuncs).ParseFiles("tmpl/layout.html", filename)
+	if err != nil {
+		return err
+	}
+	return tmpl.ExecuteTemplate(wr, "layout", data)
+}
 
 func init() {
 	timezone := os.Getenv("TIMEZONE")
@@ -60,14 +83,13 @@ func newBbsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	tmpl := template.Must(template.ParseFiles("tmpl/layout.html", "tmpl/new_bbs.html"))
+	// output HTML
 	vars := map[string]interface{}{
 		"err": "err",
 	}
-	if err := tmpl.ExecuteTemplate(w, "layout", vars); err != nil {
+	if err := parseHTML(w, "tmpl/new_bbs.html", vars); err != nil {
 		aelog.Errorf(ctx, "%v", err)
 	}
-	w.WriteHeader(200)
 }
 
 func listPostsHandler(w http.ResponseWriter, r *http.Request) {
@@ -83,8 +105,6 @@ func listPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl := template.Must(template.ParseFiles("tmpl/layout.html", "tmpl/list_posts.html"))
-
 	limit := 10
 	ps := make(posts, 0, limit)
 	nextCur, err := ps.getAll(g, b, limit, r.FormValue("offset"))
@@ -92,15 +112,16 @@ func listPostsHandler(w http.ResponseWriter, r *http.Request) {
 		aelog.Errorf(ctx, "%v", err)
 		return
 	}
+
+	// output HTML
 	vars := map[string]interface{}{
 		"bbs":      b,
 		"bbs_id":   mux.Vars(r)["bbs_id"],
 		"posts":    ps,
 		"next_cur": nextCur,
 	}
-	if err := tmpl.ExecuteTemplate(w, "layout", vars); err != nil {
+	if err := parseHTML(w, "tmpl/list_posts.html", vars); err != nil {
 		aelog.Errorf(ctx, "%v", err)
-		return
 	}
 }
 

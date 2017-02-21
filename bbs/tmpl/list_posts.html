@@ -40,7 +40,7 @@
     {{ range .posts }}
     <div>
       <h2>{{ .Subject }}</h2>
-      <p>{{ .Message }}</p>
+      <p>{{ .Message | nl2br }}</p>
       <footer>
         <p class="text-right">{{ .CreatedAt.Local.Format "2006年1月2日 15時4分5秒" }} by <strong>{{ .UserName }}</strong></p>
       </footer>
