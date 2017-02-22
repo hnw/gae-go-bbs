@@ -70,6 +70,7 @@ func init() {
 	}
 
 	r := mux.NewRouter()
+	r.HandleFunc(`/`, topHandler)
 	r.HandleFunc(`/about{_dummy:/?}`, aboutHandler)
 	r.HandleFunc(`/contact{_dummy:/?}`, contactHandler)
 	r.HandleFunc(`/bbs{_dummy:/?}`, newBbsHandler)
@@ -86,6 +87,13 @@ func notFoundHandler(w http.ResponseWriter, r *http.Request) {
 		"error": "404 Not Found",
 	}
 	if err := parseHTML(w, "tmpl/error.html", vars); err != nil {
+		aelog.Errorf(ctx, "%v", err)
+	}
+}
+
+func topHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	if err := parseHTML(w, "tmpl/top.html", nil); err != nil {
 		aelog.Errorf(ctx, "%v", err)
 	}
 }

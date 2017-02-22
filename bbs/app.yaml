@@ -17,4 +17,4 @@ handlers:
   static_dir: assets
 - url: /.*
   script: _go_app
-  secure: always
+  secure: optional

@@ -51,25 +51,19 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#">BBS on GAE</a>
+          <a class="navbar-brand" href="/">BBS on GAE</a>
         </div>
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
             <li {{ if eq ._gl_nav "about" }}class="active"{{ end }}><a href="/about">About</a></li>
             <li {{ if eq ._gl_nav "contact" }}class="active"{{ end }}><a href="/contact">Contact</a></li>
           </ul>
+          <a class="btn btn-primary navbar-btn navbar-right" href="/bbs" role="button">Create BBS</a>
         </div><!--/.nav-collapse -->
       </div>
     </nav>
 
-    <div class="container">
-
-      <div class="starter-template">
-        {{ template "content" . }}
-      </div>
-
-    </div><!-- /.container -->
-
+    {{ template "content" . }}
 
     <!-- Bootstrap core JavaScript
          ================================================== -->
