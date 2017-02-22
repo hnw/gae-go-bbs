@@ -26,6 +26,13 @@ func parseHTML(wr io.Writer, filename string, data interface{}) error {
 	// TemplateFuncs are stolen from revel framework.
 	// See: https://github.com/revel/revel/blob/master/template.go
 	TemplateFuncs := map[string]interface{}{
+		"set": func(renderArgs map[string]interface{}, key string, value interface{}) template.JS {
+			renderArgs[key] = value
+			return template.JS("")
+		},
+		"isset": func(renderArgs map[string]interface{}, key string) bool {
+			return (renderArgs[key] != nil)
+		},
 		// Replaces newlines with <br>
 		"nl2br": func(text string) template.HTML {
 			return template.HTML(strings.Replace(template.HTMLEscapeString(text), "\n", "<br>", -1))
@@ -39,6 +46,9 @@ func parseHTML(wr io.Writer, filename string, data interface{}) error {
 	tmpl, err := template.New("base").Funcs(TemplateFuncs).ParseFiles("tmpl/layout.html", filename)
 	if err != nil {
 		return err
+	}
+	if data == nil {
+		data = map[string]interface{}{}
 	}
 	return tmpl.ExecuteTemplate(wr, "layout", data)
 }
@@ -72,7 +82,10 @@ func init() {
 
 func notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	if err := parseHTML(w, "tmpl/error.html", "404 Not Found"); err != nil {
+	vars := map[string]interface{}{
+		"error": "404 Not Found",
+	}
+	if err := parseHTML(w, "tmpl/error.html", vars); err != nil {
 		aelog.Errorf(ctx, "%v", err)
 	}
 }
