@@ -59,6 +59,17 @@
     </div><!-- /.carousel -->
 
     <div class="container">
+      <h2>さいきん更新のあった掲示板</h2>
+      {{ range .recentPosts }}
+      {{ $UpdatedAt := .UpdatedAt }}
+      {{ with .Bbs }}
+      <div>
+        <p class="text-left">{{ $UpdatedAt.Local.Format "2006年1月2日 15時4分5秒" }} <a href="/bbs/{{ .ID }}/posts">{{ .Name }}</a></p>
+      </div>
+      {{ end }}
+      {{ end }}
+
+      <hr>
 
       <!-- FOOTER -->
       <footer>

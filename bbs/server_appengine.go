@@ -30,14 +30,30 @@ func parseHTML(wr io.Writer, filename string, data interface{}) error {
 			renderArgs[key] = value
 			return template.JS("")
 		},
-		"isset": func(renderArgs map[string]interface{}, key string) bool {
-			return (renderArgs[key] != nil)
+		"default": func(defVal interface{}, args ...interface{}) (interface{}, error) {
+			if len(args) >= 2 {
+				return nil, fmt.Errorf("wrong number of args for default: want 2 got %d", len(args)+1)
+			}
+			args = append(args, defVal)
+			for _, val := range args {
+				switch val.(type) {
+				case nil:
+					continue
+				case string:
+					if val == "" {
+						continue
+					}
+					return val, nil
+				default:
+					return val, nil
+				}
+			}
+			return nil, nil
 		},
 		// Replaces newlines with <br>
 		"nl2br": func(text string) template.HTML {
 			return template.HTML(strings.Replace(template.HTMLEscapeString(text), "\n", "<br>", -1))
 		},
-
 		// Skips sanitation on the parameter.  Do not use with dynamic data.
 		"raw": func(text string) template.HTML {
 			return template.HTML(text)
@@ -93,7 +109,22 @@ func notFoundHandler(w http.ResponseWriter, r *http.Request) {
 
 func topHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	if err := parseHTML(w, "tmpl/top.html", nil); err != nil {
+	g := goon.NewGoon(r)
+	limit := 5
+
+	var ps []*post
+	if err := getRecentPosts(g, &ps, limit, true); err != nil {
+	}
+	for _, p := range ps {
+		p.fetchBbs(g)
+	}
+	aelog.Infof(ctx, "ps=%v", ps)
+
+	// output HTML
+	vars := map[string]interface{}{
+		"recentPosts": ps,
+	}
+	if err := parseHTML(w, "tmpl/top.html", vars); err != nil {
 		aelog.Errorf(ctx, "%v", err)
 	}
 }
@@ -117,8 +148,8 @@ func newBbsHandler(w http.ResponseWriter, r *http.Request) {
 	g := goon.NewGoon(r)
 
 	if r.Method == "POST" {
-		b := new(bbs)
-		if err := b.fromRequest(r); err != nil {
+		b, err := newBbsFromRequest(r)
+		if err != nil {
 			aelog.Errorf(ctx, "%v", err)
 		} else if k, err := b.put(g); err != nil {
 			aelog.Errorf(ctx, "%v", err)
@@ -141,8 +172,8 @@ func listPostsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	g := goon.NewGoon(r)
 
-	b := new(bbs)
-	if err := b.fromString(mux.Vars(r)["bbs_id"]); err != nil {
+	b, err := newBbsFromString(mux.Vars(r)["bbs_id"])
+	if err != nil {
 		aelog.Errorf(ctx, "%v", err)
 		return
 	} else if err := b.get(g); err != nil {
@@ -174,8 +205,8 @@ func newPostHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	g := goon.NewGoon(r)
 
-	b := new(bbs)
-	if err := b.fromString(mux.Vars(r)["bbs_id"]); err != nil {
+	b, err := newBbsFromString(mux.Vars(r)["bbs_id"])
+	if err != nil {
 		aelog.Errorf(ctx, "%v", err)
 		return
 	} else if err := b.get(g); err != nil {
@@ -183,10 +214,10 @@ func newPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p := new(post)
-	if err := p.fromRequest(r, b); err != nil {
+	p, err := newPostFromRequest(r, b)
+	if err != nil {
 		aelog.Errorf(ctx, "%v", err)
-	} else if _, err = g.Put(p); err != nil {
+	} else if _, err := g.Put(p); err != nil {
 		aelog.Errorf(ctx, "%v", err)
 	} else {
 		aelog.Infof(ctx, "p=%v", p)

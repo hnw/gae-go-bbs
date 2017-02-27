@@ -1,5 +1,5 @@
 {{ define "variables" -}}
-    {{ if not (isset . "_gl_nav") -}}
+    {{ if not ._gl_nav -}}
         {{ set . "_gl_nav" "" -}}
     {{ end -}}
 {{ end }}

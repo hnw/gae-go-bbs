@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"google.golang.org/appengine/datastore"
+	//aelog "google.golang.org/appengine/log"
 
 	"github.com/mjibson/goon"
 )
@@ -20,24 +21,24 @@ type bbs struct {
 	UpdatedAt time.Time `datastore:"updated_at,noindex"`
 }
 
-func (b *bbs) fromString(s string) error {
+func newBbsFromString(s string) (*bbs, error) {
 	bbsID, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	b.ID = bbsID
-	return nil
+	return &bbs{ID: bbsID}, nil
 }
 
-func (b *bbs) fromRequest(r *http.Request) error {
+func newBbsFromRequest(r *http.Request) (b *bbs, err error) {
 	now := time.Now()
-	b.Name = r.PostFormValue("bbs_name")
-	b.Descr = r.PostFormValue("bbs_descr")
-	b.Theme = r.PostFormValue("theme")
-	b.CreatedAt = now
-	b.UpdatedAt = now
-
-	return nil
+	b = &bbs{
+		Name:      r.PostFormValue("bbs_name"),
+		Descr:     r.PostFormValue("bbs_descr"),
+		Theme:     r.PostFormValue("theme"),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	return b, nil
 }
 
 func (b *bbs) get(g *goon.Goon) error {

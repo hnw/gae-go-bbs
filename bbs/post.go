@@ -13,6 +13,7 @@ import (
 
 type post struct {
 	ID        int64     `datastore:"-" goon:"id"`
+	Bbs       *bbs      `datastore:"-"`
 	BbsID     int64     `datastore:"bbs_id"`
 	UserName  string    `datastore:"user_name,noindex"`
 	Subject   string    `datastore:"subject,noindex"`
@@ -24,23 +25,25 @@ type post struct {
 
 type posts []*post
 
-func (p *post) fromKey(k *datastore.Key) error {
-	p.ID = k.IntID()
-	return nil
+func newPostFromKey(k *datastore.Key) *post {
+	p := &post{
+		ID: k.IntID(),
+	}
+	return p
 }
 
-func (p *post) fromRequest(r *http.Request, b *bbs) error {
+func newPostFromRequest(r *http.Request, b *bbs) (*post, error) {
 	now := time.Now()
-
-	p.BbsID = b.ID
-	p.UserName = r.PostFormValue("user_name")
-	p.Subject = r.PostFormValue("subject")
-	p.Message = r.PostFormValue("message")
-	p.IPAddr = r.RemoteAddr
-	p.CreatedAt = now
-	p.UpdatedAt = now
-
-	return nil
+	p := &post{
+		BbsID:     b.ID,
+		UserName:  r.PostFormValue("user_name"),
+		Subject:   r.PostFormValue("subject"),
+		Message:   r.PostFormValue("message"),
+		IPAddr:    r.RemoteAddr,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	return p, nil
 }
 
 func (p *post) get(g *goon.Goon) error {
@@ -67,6 +70,36 @@ func (p *post) put(g *goon.Goon) (*datastore.Key, error) {
 	return k, nil
 }
 
+func (p *post) fetchBbs(g *goon.Goon) {
+	b := &bbs{ID: p.BbsID}
+	if err := g.Get(b); err == nil {
+		p.Bbs = b
+	}
+}
+
+func (b *bbs) getPostsKeys(g *goon.Goon, ps []*post, from time.Time, limit int, descOrder bool) error {
+	q := datastore.NewQuery("post").KeysOnly().Filter("bbs_id =", b.ID)
+
+	if descOrder {
+		if !from.IsZero() {
+			q = q.Filter("updated_at <=", from)
+		}
+		q = q.Order("-updated_at")
+	} else {
+		if !from.IsZero() {
+			q = q.Filter("updated_at >=", from)
+		}
+		q = q.Order("updated_at")
+	}
+	if limit != 0 {
+		q = q.Limit(limit)
+	}
+	if _, err := g.GetAll(q, ps); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (ptr *posts) getAll(g *goon.Goon, b *bbs, limit int, encodedCursor string) (string, error) {
 	ps := *ptr
 	encCur := ""
@@ -90,12 +123,8 @@ func (ptr *posts) getAll(g *goon.Goon, b *bbs, limit int, encodedCursor string) 
 		if err != nil {
 			return "", err
 		}
-		p := new(post)
-		if err := p.fromKey(k); err != nil {
-			return "", err
-		}
-		ps = append(ps, p)
-		cnt += 1
+		ps = append(ps, newPostFromKey(k))
+		cnt++
 		if cnt >= limit {
 			cur, err := t.Cursor() // 内部的にAPIに問い合わせるため遅い
 			if err != nil {
@@ -112,4 +141,44 @@ func (ptr *posts) getAll(g *goon.Goon, b *bbs, limit int, encodedCursor string) 
 	*ptr = ps
 
 	return encCur, nil
+}
+
+func getRecentPosts(g *goon.Goon, ptr *[]*post, limit int, distinctOnBbs bool) error {
+	ps := make([]*post, 0, limit)
+	q := datastore.NewQuery("post").Project("bbs_id", "updated_at").Order("-updated_at")
+
+	if !distinctOnBbs {
+		q = q.Limit(limit)
+	}
+
+	t := q.Run(g.Context)
+	cnt := 0
+	occurred := make(map[int64]bool)
+	for {
+		p := &post{}
+		k, err := t.Next(p)
+		p.ID = k.IntID()
+		if err == datastore.Done {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		if distinctOnBbs && occurred[p.BbsID] {
+			continue
+		}
+		//aelog.Infof(g.Context, "p=%v", p)
+		ps = append(ps, p)
+		cnt++
+		occurred[p.BbsID] = true
+		if cnt >= limit {
+			break
+		}
+	}
+	if err := g.GetMulti(ps); err != nil {
+		return err
+	}
+
+	*ptr = ps
+	return nil
 }
