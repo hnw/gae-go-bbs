@@ -17,8 +17,15 @@ type bbs struct {
 	Name      string    `datastore:"name,noindex"`
 	Descr     string    `datastore:"descr,noindex"`
 	Theme     string    `datastore:"theme,noindex"`
-	CreatedAt time.Time `datastore:"created_at,noindex"`
-	UpdatedAt time.Time `datastore:"updated_at,noindex"`
+	CreatedAt time.Time `datastore:"created_at"`
+	UpdatedAt time.Time `datastore:"updated_at"`
+}
+
+func newBbsFromKey(k *datastore.Key) *bbs {
+	b := &bbs{
+		ID: k.IntID(),
+	}
+	return b
 }
 
 func newBbsFromString(s string) (*bbs, error) {
@@ -63,4 +70,29 @@ func (b *bbs) put(g *goon.Goon) (*datastore.Key, error) {
 		return nil, err
 	}
 	return k, nil
+}
+
+func getNewBbss(g *goon.Goon, ptr *[]*bbs, limit int) error {
+	bs := make([]*bbs, 0, limit)
+	q := datastore.NewQuery("bbs").KeysOnly().Order("-created_at").Limit(limit)
+
+	// Iterate over the results.
+	t := g.Run(q)
+	//aelog.Infof(g.Context, "g.Run() finished")
+	for {
+		k, err := t.Next(nil)
+		if err == datastore.Done {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		bs = append(bs, newBbsFromKey(k))
+	}
+	if err := g.GetMulti(bs); err != nil {
+		return err
+	}
+
+	*ptr = bs
+	return nil
 }

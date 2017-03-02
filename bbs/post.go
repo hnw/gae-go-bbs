@@ -104,7 +104,7 @@ func (ptr *posts) getAll(g *goon.Goon, b *bbs, limit int, encodedCursor string) 
 	ps := *ptr
 	encCur := ""
 
-	q := datastore.NewQuery("post").KeysOnly().Filter("bbs_id =", b.ID).Order("-updated_at")
+	q := datastore.NewQuery("post").KeysOnly().Filter("bbs_id =", b.ID).Order("-updated_at").Order("-__key__")
 	if encodedCursor != "" {
 		cursor, err := datastore.DecodeCursor(encodedCursor)
 		if err == nil {
@@ -157,7 +157,6 @@ func getRecentPosts(g *goon.Goon, ptr *[]*post, limit int, distinctOnBbs bool) e
 	for {
 		p := &post{}
 		k, err := t.Next(p)
-		p.ID = k.IntID()
 		if err == datastore.Done {
 			break
 		}
@@ -167,6 +166,7 @@ func getRecentPosts(g *goon.Goon, ptr *[]*post, limit int, distinctOnBbs bool) e
 		if distinctOnBbs && occurred[p.BbsID] {
 			continue
 		}
+		p.ID = k.IntID()
 		//aelog.Infof(g.Context, "p=%v", p)
 		ps = append(ps, p)
 		cnt++

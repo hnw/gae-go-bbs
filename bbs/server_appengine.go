@@ -112,17 +112,22 @@ func topHandler(w http.ResponseWriter, r *http.Request) {
 	g := goon.NewGoon(r)
 	limit := 5
 
+	var bs []*bbs
+	if err := getNewBbss(g, &bs, limit); err != nil {
+	}
 	var ps []*post
 	if err := getRecentPosts(g, &ps, limit, true); err != nil {
 	}
 	for _, p := range ps {
 		p.fetchBbs(g)
 	}
-	aelog.Infof(ctx, "ps=%v", ps)
+	//aelog.Infof(ctx, "ps=%v", ps)
+	//aelog.Infof(ctx, "bs=%v", bs)
 
 	// output HTML
 	vars := map[string]interface{}{
 		"recentPosts": ps,
+		"newBbss":     bs,
 	}
 	if err := parseHTML(w, "tmpl/top.html", vars); err != nil {
 		aelog.Errorf(ctx, "%v", err)

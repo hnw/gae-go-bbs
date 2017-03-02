@@ -22,7 +22,7 @@
           <div class="container">
             <div class="carousel-caption">
               <h1>自分だけの掲示板を今すぐ作成</h1>
-              <p>誰でも1ステップで簡単に掲示板が作れます。利用料は永年無料。</p>
+              <p>誰でも1ステップで簡単に掲示板が作れます。<br>利用料は永年無料（サービスが終了しないとは言っていない）。</p>
               <p><a class="btn btn-lg btn-primary" href="/bbs" role="button">Create BBS</a></p>
             </div>
           </div>
@@ -32,7 +32,7 @@
           <div class="container">
             <div class="carousel-caption">
               <h1>高速・安定</h1>
-              <p>バックエンドにGoogle App Engine+DataStoreを採用。超大規模なアクセス集中にも（理屈上は）耐えられます。</p>
+              <p>バックエンドにGoogle App Engine+DataStoreを採用。<br>超大規模なアクセス集中にも（理屈上は）耐えられます。</p>
               <p><a class="btn btn-lg btn-primary" href="#" role="button">Learn more</a></p>
             </div>
           </div>
@@ -42,7 +42,7 @@
           <div class="container">
             <div class="carousel-caption">
               <h1>フルカスタマイズ可能</h1>
-              <p>本システムはOSSの形で公開されており、自由に修正・配布できます。また、Google App Engineにて低コストで運用できます。</p>
+              <p>本システムはOSSの形で公開されており、自由に修正・配布できます。<br>Google App Engineにて低コストで運用できます。</p>
               <p><a class="btn btn-lg btn-primary" href="https://github.com/hnw/gae-go-bbs/" role="button">Show GitHub</a></p>
             </div>
           </div>
@@ -59,22 +59,43 @@
     </div><!-- /.carousel -->
 
     <div class="container">
-      <h2>さいきん更新のあった掲示板</h2>
-      {{ range .recentPosts }}
-      {{ $UpdatedAt := .UpdatedAt }}
-      {{ with .Bbs }}
-      <div>
-        <p class="text-left">{{ $UpdatedAt.Local.Format "2006年1月2日 15時4分5秒" }} <a href="/bbs/{{ .ID }}/posts">{{ .Name }}</a></p>
+      <div class="row">
+        <div class="col-md-6 col-xs-12">
+          <h2>さいきん更新のあった掲示板</h2>
+          <table class="table">
+            <tbody>
+              {{ range .recentPosts }}
+              {{ $UpdatedAt := .UpdatedAt }}
+              {{ with .Bbs }}
+              <tr>
+                <td class="col-xs-4 col-md-6 col-lg-5 text-left">{{ $UpdatedAt.Local.Format "2006年1月2日 15時4分5秒" }}</td>
+                <td class="text-left"><a href="/bbs/{{ .ID }}/posts">{{ .Name }}</a></td>
+              </tr>
+              {{ end }}
+              {{ end }}
+            </tbody>
+          </table>
+        </div>
+        <div class="col-md-6 col-xs-12">
+          <h2>さいきん作られた掲示板</h2>
+          <table class="table">
+            <tbody>
+              {{ range .newBbss }}
+              <tr>
+                <td class="col-xs-4 col-md-6 col-lg-5 text-left">{{ .CreatedAt.Local.Format "2006年1月2日 15時4分5秒" }}</td>
+                <td class="text-left"><a href="/bbs/{{ .ID }}/posts">{{ .Name }}</a></td>
+              </tr>
+              {{ end }}
+            </tbody>
+          </table>
+        </div>
       </div>
-      {{ end }}
-      {{ end }}
-
       <hr>
 
       <!-- FOOTER -->
       <footer>
         <p class="pull-right"><a href="#">Back to top</a></p>
-        <p>&copy; 2016 hnw &middot; <a href="#">Privacy</a> &middot; <a href="#">Terms</a></p>
+        <p>&copy; 2016 @hnw &middot; <a href="#">Privacy</a> &middot; <a href="#">Terms</a></p>
       </footer>
     </div>
 

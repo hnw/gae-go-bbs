@@ -18,6 +18,14 @@ indexes:
 
 - kind: post
   properties:
+  - name: bbs_id
+  - name: updated_at
+    direction: desc
+  - name: __key__
+    direction: desc
+
+- kind: post
+  properties:
   - name: updated_at
     direction: desc
   - name: bbs_id
