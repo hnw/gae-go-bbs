@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"google.golang.org/appengine"
+	"google.golang.org/appengine/internal"
 	aelog "google.golang.org/appengine/log"
 
 	"github.com/gorilla/mux"
@@ -108,15 +109,26 @@ func notFoundHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func topHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
-	g := goon.NewGoon(r)
+	rawCtx := appengine.NewContext(r)
+	aelog.Errorf(rawCtx, "rawCtx=%v", rawCtx)
+	ctx, err := appengine.Namespace(rawCtx, "hogehoge")
+	if err != nil {
+		aelog.Errorf(ctx, "%v", err)
+	}
+	aelog.Errorf(ctx, "ctx=%v", ctx)
+
+	g := goon.FromContext(ctx)
 	limit := 5
+
+	aelog.Infof(ctx, "ns=%v", internal.NamespaceFromContext(ctx))
 
 	var bs []*bbs
 	if err := getNewBbss(g, &bs, limit); err != nil {
+		aelog.Errorf(ctx, "%v", err)
 	}
 	var ps []*post
 	if err := getRecentPosts(g, &ps, limit, true); err != nil {
+		aelog.Errorf(ctx, "%v", err)
 	}
 	for _, p := range ps {
 		p.fetchBbs(g)
@@ -136,6 +148,7 @@ func topHandler(w http.ResponseWriter, r *http.Request) {
 
 func aboutHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
+
 	if err := parseHTML(w, "tmpl/about.html", nil); err != nil {
 		aelog.Errorf(ctx, "%v", err)
 	}
